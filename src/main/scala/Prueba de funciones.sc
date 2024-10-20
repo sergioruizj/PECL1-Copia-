@@ -28,3 +28,5 @@ val arbol2 = RamaHuff(arbol1,nodo3)
 caracteres(arbol2)
 peso(arbol1)
 peso(nodo3)
+
+6+8
