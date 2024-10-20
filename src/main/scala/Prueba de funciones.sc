@@ -30,5 +30,3 @@ peso(arbol1)
 peso(nodo3)
 
 6+8
-
-1+1
