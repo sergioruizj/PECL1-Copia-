@@ -43,6 +43,9 @@ abstract class ArbolHuff {
         descodFinal()
 
     descodFinal()
+
+//  def codificar(cadena: String): List[Bit] = Preguntar el tipo de búsqueda llegar a los caracteres y sacar los bits
+
 }
 
 
