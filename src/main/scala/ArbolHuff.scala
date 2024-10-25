@@ -1,3 +1,5 @@
+import scala.annotation.tailrec
+
 abstract class ArbolHuff {
 
   type Bit = 0 | 1
@@ -23,34 +25,24 @@ abstract class ArbolHuff {
     listaChar.mkString
 
   def descodificar(bits: List[Bit]): String =
-//    def descodAux(arbol: ArbolHuff, bits: List[Bit]): (Char, List[Bit]) = bits match
-//      case h :: t => if h == 0 then {
-//        arbol match
-//          case RamaHuff(nodoDch, nodoIzq) => descodAux(nodoIzq, t)
-//          case NodoHuff(caracter, frecuencia) => (caracter, t)
-//      } else {
-//        arbol match
-//          case RamaHuff(nodoDch, nodoIzq) => descodAux(nodoDch, t)
-//          case NodoHuff(caracter, frecuencia) => (caracter, t)
-//      }
+    @tailrec
     def descodAux(arbol: ArbolHuff, bits: List[Bit]): (Char, List[Bit]) = arbol match
       case RamaHuff(nodoDch, nodoIzq) => bits match
         case h :: t => if h == 0 then descodAux(nodoIzq,t) else descodAux(nodoDch,t)
       case NodoHuff(caracter, frecuencia) => (caracter,bits)
 
-
-
-
     var listaC: List[Char] = List();
     var listaB: List[Bit] = bits;
-    while (listaB.nonEmpty) {
-      val (caracter, restoBits) = descodAux(this, listaB)
-      listaC = caracter :: listaC
-      listaB = restoBits
-    }
 
-    listaCharsACadena(listaC.reverse)
+    @tailrec
+    def descodFinal(): String = listaB match
+      case Nil => listaCharsACadena(listaC.reverse)
+      case _ => val (caracter, restoBits) = descodAux(this, listaB)
+        listaC = caracter :: listaC
+        listaB = restoBits
+        descodFinal()
 
+    descodFinal()
 }
 
 
