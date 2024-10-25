@@ -23,16 +23,23 @@ abstract class ArbolHuff {
     listaChar.mkString
 
   def descodificar(bits: List[Bit]): String =
-    def descodAux(arbol: ArbolHuff, bits: List[Bit]): (Char, List[Bit]) = bits match
-      case h :: t => if h == 0 then {
-        arbol match
-          case RamaHuff(nodoDch, nodoIzq) => descodAux(nodoIzq, t)
-          case NodoHuff(caracter, frecuencia) => (caracter, t)
-      } else {
-        arbol match
-          case RamaHuff(nodoDch, nodoIzq) => descodAux(nodoDch, t)
-          case NodoHuff(caracter, frecuencia) => (caracter, t)
-      }
+//    def descodAux(arbol: ArbolHuff, bits: List[Bit]): (Char, List[Bit]) = bits match
+//      case h :: t => if h == 0 then {
+//        arbol match
+//          case RamaHuff(nodoDch, nodoIzq) => descodAux(nodoIzq, t)
+//          case NodoHuff(caracter, frecuencia) => (caracter, t)
+//      } else {
+//        arbol match
+//          case RamaHuff(nodoDch, nodoIzq) => descodAux(nodoDch, t)
+//          case NodoHuff(caracter, frecuencia) => (caracter, t)
+//      }
+    def descodAux(arbol: ArbolHuff, bits: List[Bit]): (Char, List[Bit]) = arbol match
+      case RamaHuff(nodoDch, nodoIzq) => bits match
+        case h :: t => if h == 0 then descodAux(nodoIzq,t) else descodAux(nodoDch,t)
+      case NodoHuff(caracter, frecuencia) => (caracter,bits)
+
+
+
 
     var listaC: List[Char] = List();
     var listaB: List[Bit] = bits;
@@ -55,17 +62,13 @@ object ArbolHuffTest {
     val nodoO = NodoHuff('O', 3)
     val nodoE = NodoHuff('E', 2)
     val nodoEsp = NodoHuff(' ', 2)
-    val ramaAB = RamaHuff(nodoA, nodoB)
-    val arbol = RamaHuff(ramaAB, nodoC)  // Árbol con A, B y C
+    val rama1 = RamaHuff(nodoEsp,nodoE)
+    val rama2 = RamaHuff(rama1, nodoO)
+    val arbol = RamaHuff(rama2, nodoS)
 
     // Probar el método peso
     println(s"Peso del árbol: ${arbol.peso}")  // Debe ser 5 + 7 + 10 = 22
-
-    // Probar el método caracteres
-    println(s"Caracteres en el árbol: ${arbol.caracteres.mkString(", ")}")  // Debe ser A, B, C
-
-    // Probar el método descodificar
-    val bits: List[arbol.Bit] = List(0, 0, 1, 0, 1, 1)  // Representación de una secuencia de bits
-    println(s"Descodificación de bits: ${arbol.descodificar(bits)}")
+    val listaB: List[arbol.Bit] = List(0,1,0,1,1,1,0,0,1,0)
+    println(arbol.descodificar(listaB))
   }
 }
