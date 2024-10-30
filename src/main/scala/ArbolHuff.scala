@@ -29,20 +29,16 @@ abstract class ArbolHuff {
     def descodAux(arbol: ArbolHuff, bits: List[Bit]): (Char, List[Bit]) = arbol match
       case RamaHuff(nodoDch, nodoIzq) => bits match
         case h :: t => if h == 0 then descodAux(nodoIzq,t) else descodAux(nodoDch,t)
+        case _ => throw new Error("La lista de Bits introducida no es posible en este árbol")
       case NodoHuff(caracter, frecuencia) => (caracter,bits)
 
-    var listaC: List[Char] = List();
-    var listaB: List[Bit] = bits;
-
     @tailrec
-    def descodFinal(): String = listaB match
+    def descodFinal(listaC: List[Char], listaB: List[Bit]): String = listaB match
       case Nil => listaCharsACadena(listaC.reverse)
       case _ => val (caracter, restoBits) = descodAux(this, listaB)
-        listaC = caracter :: listaC
-        listaB = restoBits
-        descodFinal()
+        descodFinal(caracter :: listaC, restoBits)
 
-    descodFinal()
+    descodFinal(Nil, bits)
 
 //  def codificar(cadena: String): List[Bit] = Preguntar el tipo de búsqueda llegar a los caracteres y sacar los bits
 
@@ -63,7 +59,7 @@ object ArbolHuffTest {
 
     // Probar el método peso
     println(s"Peso del árbol: ${arbol.peso}")  // Debe ser 5 + 7 + 10 = 22
-    val listaB: List[arbol.Bit] = List(0,1,0,1,1,1,0,0,1,0)
+    val listaB: List[arbol.Bit] = List(0, 1)
     println(arbol.descodificar(listaB))
   }
 }
