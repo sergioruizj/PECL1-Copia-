@@ -40,8 +40,29 @@ abstract class ArbolHuff {
 
     descodFinal(Nil, bits)
 
-//  def codificar(cadena: String): List[Bit] = Preguntar el tipo de búsqueda llegar a los caracteres y sacar los bits
+  def codificar(cadena: String): List[Bit] =
 
+    // Método para comprobar si un caracter se encuentra en un arbol
+    def hay_caracter_en_arbol(arbol: ArbolHuff, caracter: Char): Boolean =
+      def aux_caracter(caracter: Char, listaC: List[Char]): Boolean =
+        if caracter == listaC.head then true
+        else if listaC.tail.nonEmpty then aux_caracter(caracter, listaC.tail)
+        else false
+
+      aux_caracter(caracter, arbol.caracteres)
+
+
+    def auxCodificar(lista_cod: List[Char], arbol: ArbolHuff, listaB: List[Bit]): List[Bit] = lista_cod match
+      case Nil => listaB.reverse
+      case h :: t => arbol match
+        case RamaHuff(nodoDch, nodoIzq) =>
+          if hay_caracter_en_arbol(nodoIzq, lista_cod.head) then auxCodificar(lista_cod, nodoIzq, 0 :: listaB)
+          else if hay_caracter_en_arbol(nodoDch, lista_cod.head) then auxCodificar(lista_cod, nodoDch, 1 :: listaB)
+          else throw new Error("Alguno de los caractéres introducidos no se encuentra en el árbol")
+        case NodoHuff(caracter, frecuencia) => auxCodificar(t, this, listaB)
+
+
+    auxCodificar(cadenaAListaChars(cadena), this, Nil)
 }
 
 
@@ -59,7 +80,10 @@ object ArbolHuffTest {
 
     // Probar el método peso
     println(s"Peso del árbol: ${arbol.peso}")  // Debe ser 5 + 7 + 10 = 22
-    val listaB: List[arbol.Bit] = List(0, 1)
+    val listaB: List[arbol.Bit] = List(0, 0)
     println(arbol.descodificar(listaB))
+    println(arbol.codificar("SSSSO ES"))
+    println(arbol.codificar("1"))
+
   }
 }
