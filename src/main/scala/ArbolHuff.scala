@@ -65,25 +65,24 @@ abstract class ArbolHuff {
     auxCodificar(cadenaAListaChars(cadena), this, Nil)
 }
 
+case class NodoHuff(caracter: Char, frecuencia: Int) extends ArbolHuff
 
-object ArbolHuffTest {
+case class RamaHuff(nodoDch: ArbolHuff, nodoIzq: ArbolHuff) extends ArbolHuff
+def main(args: Array[String]): Unit = {
+  // Construir un árbol de Huffman simple para pruebas
+  val nodoS = NodoHuff('S', 4)
+  val nodoO = NodoHuff('O', 3)
+  val nodoE = NodoHuff('E', 2)
+  val nodoEsp = NodoHuff(' ', 2)
+  val rama1 = RamaHuff(nodoEsp, nodoE)
+  val rama2 = RamaHuff(rama1, nodoO)
+  val arbol = RamaHuff(rama2, nodoS)
 
-  def main(args: Array[String]): Unit = {
-    // Construir un árbol de Huffman simple para pruebas
-    val nodoS = NodoHuff('S', 4)
-    val nodoO = NodoHuff('O', 3)
-    val nodoE = NodoHuff('E', 2)
-    val nodoEsp = NodoHuff(' ', 2)
-    val rama1 = RamaHuff(nodoEsp,nodoE)
-    val rama2 = RamaHuff(rama1, nodoO)
-    val arbol = RamaHuff(rama2, nodoS)
+  // Probar el método peso
+  println(s"Peso del árbol: ${arbol.peso}") // Debe ser 5 + 7 + 10 = 22
+  val listaB: List[arbol.Bit] = List(0, 0)
+  println(arbol.descodificar(listaB))
+  println(arbol.codificar("SSSSO ES"))
+  println(arbol.codificar("1"))
 
-    // Probar el método peso
-    println(s"Peso del árbol: ${arbol.peso}")  // Debe ser 5 + 7 + 10 = 22
-    val listaB: List[arbol.Bit] = List(0, 0)
-    println(arbol.descodificar(listaB))
-    println(arbol.codificar("SSSSO ES"))
-    println(arbol.codificar("1"))
-
-  }
 }
