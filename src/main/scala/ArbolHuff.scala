@@ -64,7 +64,11 @@ abstract class ArbolHuff {
 
     auxCodificar(cadenaAListaChars(cadena), this, Nil)
 
-  // Método para generar una lista de tuplas (caracter, frecuencia) a partir de una lista de caracteres
+
+  // CREACIÓN DEL ÁRBOL
+
+
+  // Generar una lista de tuplas (caracter, frecuencia) a partir de una lista de caracteres
   def listaCharsAdistFrec(listaChar: List[Char]): List[(Char, Int)] =
 
     // Método para meter un caracter a una lista caracter-frecuencia
@@ -82,6 +86,26 @@ abstract class ArbolHuff {
 
     AuxListaCharsAdistFrec(listaChar, List())
 
+
+  // Convertir la lista de tuplas en una lista de hojas ordenada de forma creciente según el peso
+  def distribFrecAListaHojas(frec: List[(Char, Int)]): List[NodoHuff] =
+    // Búsqueda de la menor frecuencia
+    def menorFrec(frec: List[(Char, Int)], menorPeso: Int): Int = frec match
+      case (caracter, peso) :: tail => if peso <= menorPeso then menorFrec(tail, peso) else menorFrec(tail, menorPeso)
+
+    // Método para encontrar el caracter con menor frecuencia
+    def menorCaracter(frec: List[(Char, Int)]): (List[(Char, Int)], (Char, Int)) = frec match
+      case head :: tail =>
+
+
+    def auxDistribFrecAListaHojas(frec: List[(Char, Int)], listaFinal: List[NodoHuff]): List[NodoHuff] = frec match
+      case Nil => listaFinal
+      case head :: tail =>
+
+
+
+
+
   //  def crearArbolHuffman(cadena: String): ArbolHuff =
 
 
@@ -91,8 +115,7 @@ case class NodoHuff(caracter: Char, frecuencia: Int) extends ArbolHuff
 
 case class RamaHuff(nodoDch: ArbolHuff, nodoIzq: ArbolHuff) extends ArbolHuff
 
-Object ArbolHuffTest {
-def main(args: Array[String]): Unit = {
+@main def main(): Unit = {
   // Construir un árbol de Huffman simple para pruebas
   val nodoS = NodoHuff('S', 4)
   val nodoO = NodoHuff('O', 3)
@@ -107,8 +130,6 @@ def main(args: Array[String]): Unit = {
   val listaB: List[arbol.Bit] = List(0, 0)
   println(arbol.descodificar(listaB))
   println(arbol.codificar("SSSSO ES"))
-  println(arbol.codificar("0"))
 
-  println(arbol.listaCharsAdistFrec(List('A', 'b', 'A')))
-}
+  println(arbol.listaCharsAdistFrec(List('S', 'S', 'S', ' ', 'S')))
 }
