@@ -88,19 +88,57 @@ abstract class ArbolHuff {
 
 
   // Convertir la lista de tuplas en una lista de hojas ordenada de forma creciente según el peso
-  def distribFrecAListaHojas(frec: List[(Char, Int)]): List[NodoHuff] =
-    // Búsqueda de la menor frecuencia
-    def menorFrec(frec: List[(Char, Int)], menorPeso: Int): Int = frec match
-      case (caracter, peso) :: tail => if peso <= menorPeso then menorFrec(tail, peso) else menorFrec(tail, menorPeso)
+//  def distribFrecAListaHojas(frec: List[(Char, Int)]): List[NodoHuff] =
+//    // Búsqueda de la menor frecuencia
+//    def menorFrec(frec: List[(Char, Int)], menorPeso: Int): Int = frec match
+//      case (caracter, peso) :: tail => if peso <= menorPeso then menorFrec(tail, peso) else menorFrec(tail, menorPeso)
+//
+//    // Método para encontrar el caracter con menor frecuencia
+//    def menorCaracter(frec: List[(Char, Int)]): (List[(Char, Int)], (Char, Int)) = frec match
+//      case head :: tail =>
+//
+//
+//    def auxDistribFrecAListaHojas(frec: List[(Char, Int)], listaFinal: List[NodoHuff]): List[NodoHuff] = frec match
+//      case Nil => listaFinal
+//      case head :: tail =>
 
-    // Método para encontrar el caracter con menor frecuencia
-    def menorCaracter(frec: List[(Char, Int)]): (List[(Char, Int)], (Char, Int)) = frec match
+
+  // Convertir una tupla en un nodo hoja
+  def tuplaANodo(tupla: (Char, Int)): NodoHuff = tupla match {
+    case (caracter, frecuencia) => NodoHuff(caracter, frecuencia)
+  }
+
+  // Convertir la lista de tuplas en una lista de hojas ordenada de forma creciente según el peso
+  def distribFrecAListaHojas(frec: List[(Char, Int)]): List[NodoHuff] = {
+    
+    //Inserta el nodo ordenándolo dentro de la lista
+    def insertaNodoOrdenado(nodo: NodoHuff, lista: List[NodoHuff]): List[NodoHuff] = lista match {
+      case Nil => List(nodo)
       case head :: tail =>
-
-
-    def auxDistribFrecAListaHojas(frec: List[(Char, Int)], listaFinal: List[NodoHuff]): List[NodoHuff] = frec match
-      case Nil => listaFinal
+        if (nodo.frecuencia <= head.frecuencia) nodo :: lista
+        else head :: insertaNodoOrdenado(nodo, tail)
+    }
+    
+    //Recorre la lista de tuplas y las ordena convirtiéndolas en nodos
+    @tailrec
+    def distribFrecAListaHojasAux(tuplas: List[(Char, Int)], listaOrdenada: List[NodoHuff] = Nil): List[NodoHuff] = tuplas match {
+      case Nil => listaOrdenada
       case head :: tail =>
+        val nodo = tuplaANodo(head) // Convertimos la tupla en un nodo
+        distribFrecAListaHojasAux(tail, insertaNodoOrdenado(nodo, listaOrdenada))
+    }
+
+    distribFrecAListaHojasAux(frec)
+  }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -132,4 +170,8 @@ case class RamaHuff(nodoDch: ArbolHuff, nodoIzq: ArbolHuff) extends ArbolHuff
   println(arbol.codificar("SSSSO ES"))
 
   println(arbol.listaCharsAdistFrec(List('S', 'S', 'S', ' ', 'S')))
+
+  val frecuencias = List(('a', 5), ('b', 2), ('c', 7), ('d', 1))
+  val listaHojas = arbol.distribFrecAListaHojas(frecuencias)
+  println(listaHojas) // Debería imprimir los nodos ordenados: d, b, a, c
 }
