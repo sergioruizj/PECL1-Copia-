@@ -63,11 +63,35 @@ abstract class ArbolHuff {
 
 
     auxCodificar(cadenaAListaChars(cadena), this, Nil)
+
+  // Método para generar una lista de tuplas (caracter, frecuencia) a partir de una lista de caracteres
+  def listaCharsAdistFrec(listaChar: List[Char]): List[(Char, Int)] =
+
+    // Método para meter un caracter a una lista caracter-frecuencia
+    def actualizarFrec(c: Char, lista: List[(Char, Int)]): List[(Char, Int)] = lista match
+      case Nil => List((c, 1))
+      case (caracter, frecuencia) :: t =>
+        if (c == caracter) then (c, frecuencia + 1) :: t else (caracter, frecuencia) :: actualizarFrec(c, t)
+
+    // Método generador de la lista de tuplas
+    def AuxListaCharsAdistFrec(listaChar: List[Char], listaFinal: List[(Char, Int)]): List[(Char, Int)] = listaChar match
+      case Nil => listaFinal
+      case head :: tail =>
+        val resultado = actualizarFrec(head, listaFinal)
+        AuxListaCharsAdistFrec(tail, resultado)
+
+    AuxListaCharsAdistFrec(listaChar, List())
+
+  //  def crearArbolHuffman(cadena: String): ArbolHuff =
+
+
 }
 
 case class NodoHuff(caracter: Char, frecuencia: Int) extends ArbolHuff
 
 case class RamaHuff(nodoDch: ArbolHuff, nodoIzq: ArbolHuff) extends ArbolHuff
+
+Object ArbolHuffTest {
 def main(args: Array[String]): Unit = {
   // Construir un árbol de Huffman simple para pruebas
   val nodoS = NodoHuff('S', 4)
@@ -83,6 +107,8 @@ def main(args: Array[String]): Unit = {
   val listaB: List[arbol.Bit] = List(0, 0)
   println(arbol.descodificar(listaB))
   println(arbol.codificar("SSSSO ES"))
-  println(arbol.codificar("1"))
+  println(arbol.codificar("0"))
 
+  println(arbol.listaCharsAdistFrec(List('A', 'b', 'A')))
+}
 }
