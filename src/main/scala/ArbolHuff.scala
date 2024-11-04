@@ -110,7 +110,7 @@ abstract class ArbolHuff {
 
   // Convertir la lista de tuplas en una lista de hojas ordenada de forma creciente según el peso
   def distribFrecAListaHojas(frec: List[(Char, Int)]): List[NodoHuff] = {
-    
+
     //Inserta el nodo ordenándolo dentro de la lista
     def insertaNodoOrdenado(nodo: NodoHuff, lista: List[NodoHuff]): List[NodoHuff] = lista match {
       case Nil => List(nodo)
@@ -130,6 +130,42 @@ abstract class ArbolHuff {
 
     distribFrecAListaHojasAux(frec)
   }
+
+  // Crea un objeto RamaHuff integrando los dos ArbolHuff (izquierdo y derecho)que se le pasan como parámetros
+  def creaRamaHuff(izq: ArbolHuff, dch: ArbolHuff): RamaHuff = {
+    RamaHuff(izq, dch)
+  }
+
+
+  def combinar(nodos: List[ArbolHuff]): List[ArbolHuff] = {
+
+    def insertarOrdenado(nodo: ArbolHuff, lista: List[ArbolHuff]): List[ArbolHuff] = lista match {
+      case Nil => List(nodo)
+      case head :: tail =>
+        if (nodo.peso <= head.peso) nodo :: lista
+        else head :: insertarOrdenado(nodo, tail)
+    }
+
+    nodos match {
+      case izq :: dch :: tail =>
+        val nuevaRama = creaRamaHuff(izq, dch)
+        insertarOrdenado(nuevaRama, tail)
+      case _ => nodos
+    }
+  }
+
+  //Función booleana que evalúe que la lista resultante tenga solamente un elemento
+  def esListaSingleton(lista: List[ArbolHuff]): Boolean = lista.length == 1
+
+  //Función currificada que reciba tres parámetros en dos pasos: por un lado, las funciones
+  //combinar y esListaSingleton, y, por otro lado, la lista de nodos hoja
+  def repetirHasta[A](f: List[A] => List[A], condicion: List[A] => Boolean)(lista: List[A]): List[A] = {
+    if (condicion(lista)) lista
+    else repetirHasta(f, condicion)(f(lista))
+  }
+
+
+
 
 
 
