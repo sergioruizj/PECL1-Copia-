@@ -28,9 +28,9 @@ abstract class ArbolHuff {
     @tailrec
     def descodAux(arbol: ArbolHuff, bits: List[Bit]): (Char, List[Bit]) = arbol match
       case RamaHuff(nodoDch, nodoIzq) => bits match
-        case h :: t => if h == 0 then descodAux(nodoIzq,t) else descodAux(nodoDch,t)
+        case h :: t => if h == 0 then descodAux(nodoIzq, t) else descodAux(nodoDch, t)
         case _ => throw new Error("La lista de Bits introducida no es posible en este árbol")
-      case NodoHuff(caracter, frecuencia) => (caracter,bits)
+      case NodoHuff(caracter, frecuencia) => (caracter, bits)
 
     @tailrec
     def descodFinal(listaC: List[Char], listaB: List[Bit]): String = listaB match
@@ -65,7 +65,15 @@ abstract class ArbolHuff {
     auxCodificar(cadenaAListaChars(cadena), this, Nil)
 
 
-  // CREACIÓN DEL ÁRBOL
+  /////////////////// CREACIÓN DEL ÁRBOL ////////////////////////
+  def crearArbolHuffman(cadena: String): ArbolHuff =
+    // Generación de la lista de nodos ordenados
+    val listaHojas = distribFrecAListaHojas(listaCharsAdistFrec(this.cadenaAListaChars(cadena)))
+
+    // Creación del arbol
+    val arbol: List[ArbolHuff] = repetirHasta(combinar, esListaSingleton)(listaHojas)
+
+    arbol.head
 
 
   // Generar una lista de tuplas (caracter, frecuencia) a partir de una lista de caracteres
@@ -87,26 +95,11 @@ abstract class ArbolHuff {
     AuxListaCharsAdistFrec(listaChar, List())
 
 
-  // Convertir la lista de tuplas en una lista de hojas ordenada de forma creciente según el peso
-//  def distribFrecAListaHojas(frec: List[(Char, Int)]): List[NodoHuff] =
-//    // Búsqueda de la menor frecuencia
-//    def menorFrec(frec: List[(Char, Int)], menorPeso: Int): Int = frec match
-//      case (caracter, peso) :: tail => if peso <= menorPeso then menorFrec(tail, peso) else menorFrec(tail, menorPeso)
-//
-//    // Método para encontrar el caracter con menor frecuencia
-//    def menorCaracter(frec: List[(Char, Int)]): (List[(Char, Int)], (Char, Int)) = frec match
-//      case head :: tail =>
-//
-//
-//    def auxDistribFrecAListaHojas(frec: List[(Char, Int)], listaFinal: List[NodoHuff]): List[NodoHuff] = frec match
-//      case Nil => listaFinal
-//      case head :: tail =>
-
-
   // Convertir una tupla en un nodo hoja
   def tuplaANodo(tupla: (Char, Int)): NodoHuff = tupla match {
     case (caracter, frecuencia) => NodoHuff(caracter, frecuencia)
   }
+
 
   // Convertir la lista de tuplas en una lista de hojas ordenada de forma creciente según el peso
   def distribFrecAListaHojas(frec: List[(Char, Int)]): List[NodoHuff] = {
@@ -118,7 +111,7 @@ abstract class ArbolHuff {
         if (nodo.frecuencia <= head.frecuencia) nodo :: lista
         else head :: insertaNodoOrdenado(nodo, tail)
     }
-    
+
     //Recorre la lista de tuplas y las ordena convirtiéndolas en nodos
     @tailrec
     def distribFrecAListaHojasAux(tuplas: List[(Char, Int)], listaOrdenada: List[NodoHuff] = Nil): List[NodoHuff] = tuplas match {
@@ -131,12 +124,14 @@ abstract class ArbolHuff {
     distribFrecAListaHojasAux(frec)
   }
 
-  // Crea un objeto RamaHuff integrando los dos ArbolHuff (izquierdo y derecho)que se le pasan como parámetros
+
+  // Crea un objeto RamaHuff integrando los dos ArbolHuff (izquierdo y derecho) que se le pasan como parámetros
   def creaRamaHuff(izq: ArbolHuff, dch: ArbolHuff): RamaHuff = {
     RamaHuff(izq, dch)
   }
 
 
+  // Método auxiliar para crear una rama a partir de los dos nodos de menor peso e insertarla en la lista
   def combinar(nodos: List[ArbolHuff]): List[ArbolHuff] = {
 
     def insertarOrdenado(nodo: ArbolHuff, lista: List[ArbolHuff]): List[ArbolHuff] = lista match {
@@ -154,36 +149,74 @@ abstract class ArbolHuff {
     }
   }
 
+
   //Función booleana que evalúe que la lista resultante tenga solamente un elemento
   def esListaSingleton(lista: List[ArbolHuff]): Boolean = lista.length == 1
 
-  //Función currificada que reciba tres parámetros en dos pasos: por un lado, las funciones
-  //combinar y esListaSingleton, y, por otro lado, la lista de nodos hoja
+
+  //Función currificada que reciba tres parámetros en dos pasos: por un lado, las funciones combinar y esListaSingleton, y, por otro lado, la lista de nodos hoja
   def repetirHasta[A](f: List[A] => List[A], condicion: List[A] => Boolean)(lista: List[A]): List[A] = {
     if (condicion(lista)) lista
     else repetirHasta(f, condicion)(f(lista))
   }
 
+  // Objeto para poder crear el constructor del arbol
+  object ArbolHuff {
+    def apply(cadena: String): ArbolHuff = crearArbolHuffman(cadena)
+  }
 
 
 
 
+  //////////////////////  CREACIÓN DE LA TABLA PARA LA CODIFICACIÓN DE MENSAJES ///////////////////////
+
+  type TablaCodigos = List[(Char,List[Bit])]
+
+  def deArbolATabla(arbol: ArbolHuff): TablaCodigos =
+
+      // Método para comprobar si un caracter se encuentra en un arbol
+      def hay_caracter_en_arbol(arbol: ArbolHuff, caracter: Char): Boolean =
+        def aux_caracter(caracter: Char, listaC: List[Char]): Boolean =
+          if caracter == listaC.head then true
+          else if listaC.tail.nonEmpty then aux_caracter(caracter, listaC.tail)
+          else false
+
+        aux_caracter(caracter, arbol.caracteres)
+
+      // Generación de la cadena de bits a partir de un arbol y un caracter
+      def generarCadenaBits(caracter: Char, arbolHuff: ArbolHuff, listaB: List[Bit]): List[Bit] = arbolHuff match
+        case RamaHuff(nodoDch, nodoIzq) =>
+          if hay_caracter_en_arbol(nodoDch, caracter) then generarCadenaBits(caracter, nodoDch, 1 :: listaB) else generarCadenaBits(caracter, nodoIzq, 0 :: listaB)
+        case NodoHuff(caracter, frecuencia) => listaB.reverse
+
+      // Generación de la tabla de códigos
+      def auxdeArbolATabla(caracteres: List[Char], arbol: ArbolHuff, tablaCodigos: TablaCodigos): TablaCodigos = caracteres match
+        case Nil => tablaCodigos.reverse
+        case head :: tail =>
+          auxdeArbolATabla(tail, arbol, (head,generarCadenaBits(head,arbol,List())) :: tablaCodigos)
+
+      auxdeArbolATabla(arbol.caracteres, arbol, List())
+
+  def codificar(arbol: TablaCodigos)(cadena: String): List[Bit] =
+
+     // Método para buscar el codigo binaro correspondiente a un caracter
+     def buscarCodigo(caracter: Char, arbol: TablaCodigos): List[Bit] = arbol match
+       case (car, listaB) :: tail => if car==caracter then listaB else buscarCodigo(caracter, tail)
 
 
+     def auxCodificar(caracteres: List[Char], arbol: TablaCodigos, listaSalida: List[Bit]): List[Bit] = caracteres match
+       case Nil => listaSalida.reverse
+       case head :: tail =>
+         val codigo: List[Bit] = buscarCodigo(head, arbol)
+         auxCodificar(tail, arbol, codigo.reverse ::: listaSalida)
+
+     auxCodificar(cadena.toList, arbol, List())
 
 
-
-
-
-
-
-
-
-
-  //  def crearArbolHuffman(cadena: String): ArbolHuff =
 
 
 }
+
 
 case class NodoHuff(caracter: Char, frecuencia: Int) extends ArbolHuff
 
@@ -210,4 +243,22 @@ case class RamaHuff(nodoDch: ArbolHuff, nodoIzq: ArbolHuff) extends ArbolHuff
   val frecuencias = List(('a', 5), ('b', 2), ('c', 7), ('d', 1))
   val listaHojas = arbol.distribFrecAListaHojas(frecuencias)
   println(listaHojas) // Debería imprimir los nodos ordenados: d, b, a, c
+
+  // Probador del metodo deArbolATabla
+  println(arbol.deArbolATabla(arbol))
+
+  /***
+   * 1. He seguido los pasos para en teoría acabar con la creación del árbol pero me da este error (como estoy en el avión no puedo meterme en ChatGPT para ver que coño pasa.
+   *    Creo que el problema esta en la creación del "object ArbolHuff" no sé exactamente dónde hay que crearlo (yo lo he puesto dentro de la clase abstracta, no se si hay que ponerlo fuera, he pribado a hacerlo y tampoco va)
+   *    Porfi cuando veas esto mira donde hacerlo. Yo voy a seguir con lo siguiente para ver si son cosas que si que puedo hacer, dejo este error en rojo para que puedas verlo.
+   *    Cuando hagas esto comprueba que se haga bien (ahora mismo no se como podríamos comprobarlo pero de alguna forma se podrá hacer)
+   *
+   * 2. Hecho ya el metodo de crear una tabla a partir de un arbol, lo he comprobado con el arbolillo que tenemos hecho en el probador, creo que esta bien.
+   *    De todas formas porfa cuando veas esto asegurate de que esté bien
+   *
+   * 3. Método para codificar strings con listas caracter-codigo hecho. Igual que antes, necesito probarlos
+   */
+
+  // Esto es lo que digo en el punto 1 del comentario grande
+  // val miArbol: ArbolHuff = ArbolHuff("Hola")
 }
