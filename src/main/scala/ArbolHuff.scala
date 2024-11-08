@@ -161,12 +161,9 @@ abstract class ArbolHuff {
   }
 
   // Objeto para poder crear el constructor del arbol
-  object ArbolHuff {
-    def apply(cadena: String): ArbolHuff = crearArbolHuffman(cadena)
-  }
-
-
-
+//  object ArbolHuff {
+//    def apply(cadena: String): ArbolHuff = crearArbolHuffman(cadena)
+//  }
 
   //////////////////////  CREACIÓN DE LA TABLA PARA LA CODIFICACIÓN DE MENSAJES ///////////////////////
 
@@ -217,6 +214,9 @@ abstract class ArbolHuff {
 
 }
 
+object ArbolHuff {
+  def apply(cadena: String): ArbolHuff = new ArbolHuff {}.crearArbolHuffman(cadena)
+}
 
 case class NodoHuff(caracter: Char, frecuencia: Int) extends ArbolHuff
 
@@ -260,5 +260,25 @@ case class RamaHuff(nodoDch: ArbolHuff, nodoIzq: ArbolHuff) extends ArbolHuff
    */
 
   // Esto es lo que digo en el punto 1 del comentario grande
-  // val miArbol: ArbolHuff = ArbolHuff("Hola")
+   val miArbol: ArbolHuff = ArbolHuff("Hola")
+
+
+  // Construir un árbol de Huffman simple para pruebas
+  val nodooA = NodoHuff('A', 5)
+  val nodooB = NodoHuff('B', 2)
+  val nodooC = NodoHuff('C', 1)
+  val ramaa1 = RamaHuff(nodooC, nodooB) // Rama que contiene los nodos 'C' y 'B'
+  val arbool = RamaHuff(ramaa1, nodooA) // Rama final que une 'A' con la rama que contiene 'C' y 'B'
+
+  // Probador para el método deArbolATabla
+  val tablaCodigos = arbool.deArbolATabla(arbool)
+  println("Tabla de códigos generada a partir del árbol:")
+  tablaCodigos.foreach { case (caracter, bits) =>
+    println(s"Caracter: $caracter, Código: ${bits.mkString}")
+  }
+
+  // Ejemplo de salida esperada:
+  //   - 'A' podría estar codificado como `1`
+  //   - 'B' podría estar codificado como `01`
+  //   - 'C' podría estar codificado como `00`
 }
