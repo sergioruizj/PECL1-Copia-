@@ -251,8 +251,13 @@ object miPrograma extends App{
 
   val tabla = deArbolATabla(arbol)
   println(tabla)
-  val decodArbolP = decodificar(tabla)
-  println(decodArbolP(List(0, 1, 1, 1, 0)))
+
+  val tabla2 = deArbolATabla(crearArbolHuffman("this is an example of a huffman tree"))
+  println(tabla2)
+  val decodArbolP = decodificar(tabla2)
+
+  println(decodArbolP(codificar(tabla2)("aef i")))
+
 //  // Probar el método peso
 //  println(s"Peso del árbol: ${arbol.peso}") // Debe ser 5 + 7 + 10 = 22
 //  val listaB: List[Bit] = List(0, 0)
