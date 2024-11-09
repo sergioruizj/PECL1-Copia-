@@ -1,9 +1,7 @@
 import scala.annotation.tailrec
 
 abstract class ArbolHuff {
-
-  type Bit = 0 | 1
-
+  
   def peso: Int =
     def pesoAux(arbol: ArbolHuff): Int = arbol match
       case NodoHuff(caracter, frecuencia) => frecuencia
@@ -17,13 +15,7 @@ abstract class ArbolHuff {
       case RamaHuff(nodoDch, nodoIzq) => caracteresAux(nodoIzq, Lista) ::: caracteresAux(nodoDch, Lista)
 
     caracteresAux(this, Nil)
-
-  def cadenaAListaChars(cadena: String): List[Char] =
-    cadena.toList
-
-  def listaCharsACadena(listaChar: List[Char]): String =
-    listaChar.mkString
-
+  
   def descodificar(bits: List[Bit]): String =
     @tailrec
     def descodAux(arbol: ArbolHuff, bits: List[Bit]): (Char, List[Bit]) = arbol match
@@ -63,164 +55,166 @@ abstract class ArbolHuff {
 
 
     auxCodificar(cadenaAListaChars(cadena), this, Nil)
-
-
-  /////////////////// CREACIÓN DEL ÁRBOL ////////////////////////
-  def crearArbolHuffman(cadena: String): ArbolHuff =
-    // Generación de la lista de nodos ordenados
-    val listaHojas = distribFrecAListaHojas(listaCharsAdistFrec(this.cadenaAListaChars(cadena)))
-
-    // Creación del arbol
-    val arbol: List[ArbolHuff] = repetirHasta(combinar, esListaSingleton)(listaHojas)
-
-    arbol.head
-
-
-  // Generar una lista de tuplas (caracter, frecuencia) a partir de una lista de caracteres
-  def listaCharsAdistFrec(listaChar: List[Char]): List[(Char, Int)] =
-
-    // Método para meter un caracter a una lista caracter-frecuencia
-    def actualizarFrec(c: Char, lista: List[(Char, Int)]): List[(Char, Int)] = lista match
-      case Nil => List((c, 1))
-      case (caracter, frecuencia) :: t =>
-        if (c == caracter) then (c, frecuencia + 1) :: t else (caracter, frecuencia) :: actualizarFrec(c, t)
-
-    // Método generador de la lista de tuplas
-    def AuxListaCharsAdistFrec(listaChar: List[Char], listaFinal: List[(Char, Int)]): List[(Char, Int)] = listaChar match
-      case Nil => listaFinal
-      case head :: tail =>
-        val resultado = actualizarFrec(head, listaFinal)
-        AuxListaCharsAdistFrec(tail, resultado)
-
-    AuxListaCharsAdistFrec(listaChar, List())
-
-
-  // Convertir una tupla en un nodo hoja
-  def tuplaANodo(tupla: (Char, Int)): NodoHuff = tupla match {
-    case (caracter, frecuencia) => NodoHuff(caracter, frecuencia)
-  }
-
-
-  // Convertir la lista de tuplas en una lista de hojas ordenada de forma creciente según el peso
-  def distribFrecAListaHojas(frec: List[(Char, Int)]): List[NodoHuff] = {
-
-    //Inserta el nodo ordenándolo dentro de la lista
-    def insertaNodoOrdenado(nodo: NodoHuff, lista: List[NodoHuff]): List[NodoHuff] = lista match {
-      case Nil => List(nodo)
-      case head :: tail =>
-        if (nodo.frecuencia <= head.frecuencia) nodo :: lista
-        else head :: insertaNodoOrdenado(nodo, tail)
-    }
-
-    //Recorre la lista de tuplas y las ordena convirtiéndolas en nodos
-    @tailrec
-    def distribFrecAListaHojasAux(tuplas: List[(Char, Int)], listaOrdenada: List[NodoHuff] = Nil): List[NodoHuff] = tuplas match {
-      case Nil => listaOrdenada
-      case head :: tail =>
-        val nodo = tuplaANodo(head) // Convertimos la tupla en un nodo
-        distribFrecAListaHojasAux(tail, insertaNodoOrdenado(nodo, listaOrdenada))
-    }
-
-    distribFrecAListaHojasAux(frec)
-  }
-
-
-  // Crea un objeto RamaHuff integrando los dos ArbolHuff (izquierdo y derecho) que se le pasan como parámetros
-  def creaRamaHuff(izq: ArbolHuff, dch: ArbolHuff): RamaHuff = {
-    RamaHuff(izq, dch)
-  }
-
-
-  // Método auxiliar para crear una rama a partir de los dos nodos de menor peso e insertarla en la lista
-  def combinar(nodos: List[ArbolHuff]): List[ArbolHuff] = {
-
-    def insertarOrdenado(nodo: ArbolHuff, lista: List[ArbolHuff]): List[ArbolHuff] = lista match {
-      case Nil => List(nodo)
-      case head :: tail =>
-        if (nodo.peso <= head.peso) nodo :: lista
-        else head :: insertarOrdenado(nodo, tail)
-    }
-
-    nodos match {
-      case izq :: dch :: tail =>
-        val nuevaRama = creaRamaHuff(izq, dch)
-        insertarOrdenado(nuevaRama, tail)
-      case _ => nodos
-    }
-  }
-
-
-  //Función booleana que evalúe que la lista resultante tenga solamente un elemento
-  def esListaSingleton(lista: List[ArbolHuff]): Boolean = lista.length == 1
-
-
-  //Función currificada que reciba tres parámetros en dos pasos: por un lado, las funciones combinar y esListaSingleton, y, por otro lado, la lista de nodos hoja
-  def repetirHasta[A](f: List[A] => List[A], condicion: List[A] => Boolean)(lista: List[A]): List[A] = {
-    if (condicion(lista)) lista
-    else repetirHasta(f, condicion)(f(lista))
-  }
-
-  // Objeto para poder crear el constructor del arbol
-//  object ArbolHuff {
-//    def apply(cadena: String): ArbolHuff = crearArbolHuffman(cadena)
-//  }
-
-  //////////////////////  CREACIÓN DE LA TABLA PARA LA CODIFICACIÓN DE MENSAJES ///////////////////////
-
-  type TablaCodigos = List[(Char,List[Bit])]
-
-  def deArbolATabla(arbol: ArbolHuff): TablaCodigos =
-
-      // Método para comprobar si un caracter se encuentra en un arbol
-      def hay_caracter_en_arbol(arbol: ArbolHuff, caracter: Char): Boolean =
-        def aux_caracter(caracter: Char, listaC: List[Char]): Boolean =
-          if caracter == listaC.head then true
-          else if listaC.tail.nonEmpty then aux_caracter(caracter, listaC.tail)
-          else false
-
-        aux_caracter(caracter, arbol.caracteres)
-
-      // Generación de la cadena de bits a partir de un arbol y un caracter
-      def generarCadenaBits(caracter: Char, arbolHuff: ArbolHuff, listaB: List[Bit]): List[Bit] = arbolHuff match
-        case RamaHuff(nodoDch, nodoIzq) =>
-          if hay_caracter_en_arbol(nodoDch, caracter) then generarCadenaBits(caracter, nodoDch, 1 :: listaB) else generarCadenaBits(caracter, nodoIzq, 0 :: listaB)
-        case NodoHuff(caracter, frecuencia) => listaB.reverse
-
-      // Generación de la tabla de códigos
-      def auxdeArbolATabla(caracteres: List[Char], arbol: ArbolHuff, tablaCodigos: TablaCodigos): TablaCodigos = caracteres match
-        case Nil => tablaCodigos.reverse
-        case head :: tail =>
-          auxdeArbolATabla(tail, arbol, (head,generarCadenaBits(head,arbol,List())) :: tablaCodigos)
-
-      auxdeArbolATabla(arbol.caracteres, arbol, List())
-
-  def codificar(arbol: TablaCodigos)(cadena: String): List[Bit] =
-
-     // Método para buscar el codigo binaro correspondiente a un caracter
-     def buscarCodigo(caracter: Char, arbol: TablaCodigos): List[Bit] = arbol match
-       case (car, listaB) :: tail => if car==caracter then listaB else buscarCodigo(caracter, tail)
-
-
-     def auxCodificar(caracteres: List[Char], arbol: TablaCodigos, listaSalida: List[Bit]): List[Bit] = caracteres match
-       case Nil => listaSalida.reverse
-       case head :: tail =>
-         val codigo: List[Bit] = buscarCodigo(head, arbol)
-         auxCodificar(tail, arbol, codigo.reverse ::: listaSalida)
-
-     auxCodificar(cadena.toList, arbol, List())
-
-
-
-
-}
-
-object ArbolHuff {
-  def apply(cadena: String): ArbolHuff = new ArbolHuff {}.crearArbolHuffman(cadena)
+  
 }
 
 case class NodoHuff(caracter: Char, frecuencia: Int) extends ArbolHuff
 
 case class RamaHuff(nodoDch: ArbolHuff, nodoIzq: ArbolHuff) extends ArbolHuff
+
+type Bit = 0 | 1
+
+type TablaCodigos = List[(Char, List[Bit])]
+
+def cadenaAListaChars(cadena: String): List[Char] =
+  cadena.toList
+
+def listaCharsACadena(listaChar: List[Char]): String =
+  listaChar.mkString
+
+/////////////////// CREACIÓN DEL ÁRBOL ////////////////////////
+def crearArbolHuffman(cadena: String): ArbolHuff =
+  // Generación de la lista de nodos ordenados
+  val listaHojas = distribFrecAListaHojas(listaCharsAdistFrec(cadenaAListaChars(cadena)))
+
+  // Creación del arbol
+  val arbol: List[ArbolHuff] = repetirHasta(combinar, esListaSingleton)(listaHojas)
+
+  arbol.head
+
+
+// Generar una lista de tuplas (caracter, frecuencia) a partir de una lista de caracteres
+private def listaCharsAdistFrec(listaChar: List[Char]): List[(Char, Int)] =
+
+  // Método para meter un caracter a una lista caracter-frecuencia
+  def actualizarFrec(c: Char, lista: List[(Char, Int)]): List[(Char, Int)] = lista match
+    case Nil => List((c, 1))
+    case (caracter, frecuencia) :: t =>
+      if (c == caracter) then (c, frecuencia + 1) :: t else (caracter, frecuencia) :: actualizarFrec(c, t)
+
+  // Método generador de la lista de tuplas
+  def AuxListaCharsAdistFrec(listaChar: List[Char], listaFinal: List[(Char, Int)]): List[(Char, Int)] = listaChar match
+    case Nil => listaFinal
+    case head :: tail =>
+      val resultado = actualizarFrec(head, listaFinal)
+      AuxListaCharsAdistFrec(tail, resultado)
+
+  AuxListaCharsAdistFrec(listaChar, List())
+
+
+// Convertir una tupla en un nodo hoja
+private def tuplaANodo(tupla: (Char, Int)): NodoHuff = tupla match {
+  case (caracter, frecuencia) => NodoHuff(caracter, frecuencia)
+}
+
+
+// Convertir la lista de tuplas en una lista de hojas ordenada de forma creciente según el peso
+private def distribFrecAListaHojas(frec: List[(Char, Int)]): List[NodoHuff] = {
+
+  //Inserta el nodo ordenándolo dentro de la lista
+  def insertaNodoOrdenado(nodo: NodoHuff, lista: List[NodoHuff]): List[NodoHuff] = lista match {
+    case Nil => List(nodo)
+    case head :: tail =>
+      if (nodo.frecuencia <= head.frecuencia) nodo :: lista
+      else head :: insertaNodoOrdenado(nodo, tail)
+  }
+
+  //Recorre la lista de tuplas y las ordena convirtiéndolas en nodos
+  @tailrec
+  def distribFrecAListaHojasAux(tuplas: List[(Char, Int)], listaOrdenada: List[NodoHuff] = Nil): List[NodoHuff] = tuplas match {
+    case Nil => listaOrdenada
+    case head :: tail =>
+      val nodo = tuplaANodo(head) // Convertimos la tupla en un nodo
+      distribFrecAListaHojasAux(tail, insertaNodoOrdenado(nodo, listaOrdenada))
+  }
+
+  distribFrecAListaHojasAux(frec)
+}
+
+
+// Crea un objeto RamaHuff integrando los dos ArbolHuff (izquierdo y derecho) que se le pasan como parámetros
+private def creaRamaHuff(izq: ArbolHuff, dch: ArbolHuff): RamaHuff = {
+  RamaHuff(izq, dch)
+}
+
+
+// Método auxiliar para crear una rama a partir de los dos nodos de menor peso e insertarla en la lista
+private def combinar(nodos: List[ArbolHuff]): List[ArbolHuff] = {
+
+  def insertarOrdenado(nodo: ArbolHuff, lista: List[ArbolHuff]): List[ArbolHuff] = lista match {
+    case Nil => List(nodo)
+    case head :: tail =>
+      if (nodo.peso <= head.peso) nodo :: lista
+      else head :: insertarOrdenado(nodo, tail)
+  }
+
+  nodos match {
+    case izq :: dch :: tail =>
+      val nuevaRama = creaRamaHuff(izq, dch)
+      insertarOrdenado(nuevaRama, tail)
+    case _ => nodos
+  }
+}
+
+
+//Función booleana que evalúe que la lista resultante tenga solamente un elemento
+private def esListaSingleton(lista: List[ArbolHuff]): Boolean = lista.length == 1
+
+
+//Función currificada que reciba tres parámetros en dos pasos: por un lado, las funciones combinar y esListaSingleton, y, por otro lado, la lista de nodos hoja
+private def repetirHasta[A](f: List[A] => List[A], condicion: List[A] => Boolean)(lista: List[A]): List[A] = {
+  if (condicion(lista)) lista
+  else repetirHasta(f, condicion)(f(lista))
+}
+
+
+//////////////////////  CREACIÓN DE UNA TABLA PARA LA CODIFICACIÓN DE MENSAJES ///////////////////////
+
+def deArbolATabla(arbol: ArbolHuff): TablaCodigos =
+
+  // Método para comprobar si un caracter se encuentra en un arbol
+  def hay_caracter_en_arbol(arbol: ArbolHuff, caracter: Char): Boolean =
+    def aux_caracter(caracter: Char, listaC: List[Char]): Boolean =
+      if caracter == listaC.head then true
+      else if listaC.tail.nonEmpty then aux_caracter(caracter, listaC.tail)
+      else false
+
+    aux_caracter(caracter, arbol.caracteres)
+
+  // Generación de la cadena de bits a partir de un arbol y un caracter
+  def generarCadenaBits(caracter: Char, arbolHuff: ArbolHuff, listaB: List[Bit]): List[Bit] = arbolHuff match
+    case RamaHuff(nodoDch, nodoIzq) =>
+      if hay_caracter_en_arbol(nodoDch, caracter) then generarCadenaBits(caracter, nodoDch, 1 :: listaB) else generarCadenaBits(caracter, nodoIzq, 0 :: listaB)
+    case NodoHuff(caracter, frecuencia) => listaB.reverse
+
+  // Generación de la tabla de códigos
+  def auxdeArbolATabla(caracteres: List[Char], arbol: ArbolHuff, tablaCodigos: TablaCodigos): TablaCodigos = caracteres match
+    case Nil => tablaCodigos.reverse
+    case head :: tail =>
+      auxdeArbolATabla(tail, arbol, (head, generarCadenaBits(head, arbol, List())) :: tablaCodigos)
+
+  auxdeArbolATabla(arbol.caracteres, arbol, List())
+
+def codificar(arbol: TablaCodigos)(cadena: String): List[Bit] =
+
+  // Método para buscar el codigo binaro correspondiente a un caracter
+  def buscarCodigo(caracter: Char, arbol: TablaCodigos): List[Bit] = arbol match
+    case (car, listaB) :: tail => if car == caracter then listaB else buscarCodigo(caracter, tail)
+
+
+  def auxCodificar(caracteres: List[Char], arbol: TablaCodigos, listaSalida: List[Bit]): List[Bit] = caracteres match
+    case Nil => listaSalida.reverse
+    case head :: tail =>
+      val codigo: List[Bit] = buscarCodigo(head, arbol)
+      auxCodificar(tail, arbol, codigo.reverse ::: listaSalida)
+
+  auxCodificar(cadena.toList, arbol, List())
+  
+  
+
+object ArbolHuff {
+  def apply(cadena: String): ArbolHuff = crearArbolHuffman(cadena)
+}
 
 @main def main(): Unit = {
   // Construir un árbol de Huffman simple para pruebas
@@ -234,11 +228,10 @@ case class RamaHuff(nodoDch: ArbolHuff, nodoIzq: ArbolHuff) extends ArbolHuff
 
   // Probar el método peso
   println(s"Peso del árbol: ${arbol.peso}") // Debe ser 5 + 7 + 10 = 22
-  val listaB: List[arbol.Bit] = List(0, 0)
+  val listaB: List[Bit] = List(0, 0)
   println(arbol.descodificar(listaB))
   println(arbol.codificar("SSSSO ES"))
-
-  println(arbol.listaCharsAdistFrec(List('S', 'S', 'S', ' ', 'S')))
+  
 
   val frecuencias = List(('a', 5), ('b', 2), ('c', 7), ('d', 1))
   val listaHojas = arbol.distribFrecAListaHojas(frecuencias)
