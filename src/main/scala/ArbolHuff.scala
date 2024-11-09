@@ -36,6 +36,7 @@ abstract class ArbolHuff {
 
     // Método para comprobar si un caracter se encuentra en un arbol
     def hay_caracter_en_arbol(arbol: ArbolHuff, caracter: Char): Boolean =
+      @tailrec
       def aux_caracter(caracter: Char, listaC: List[Char]): Boolean =
         if caracter == listaC.head then true
         else if listaC.tail.nonEmpty then aux_caracter(caracter, listaC.tail)
@@ -43,7 +44,7 @@ abstract class ArbolHuff {
 
       aux_caracter(caracter, arbol.caracteres)
 
-
+    @tailrec
     def auxCodificar(lista_cod: List[Char], arbol: ArbolHuff, listaB: List[Bit]): List[Bit] = lista_cod match
       case Nil => listaB.reverse
       case h :: t => arbol match
@@ -66,11 +67,9 @@ type Bit = 0 | 1
 
 type TablaCodigos = List[(Char, List[Bit])]
 
-def cadenaAListaChars(cadena: String): List[Char] =
-  cadena.toList
+def cadenaAListaChars(cadena: String): List[Char] = cadena.toList
 
-def listaCharsACadena(listaChar: List[Char]): String =
-  listaChar.mkString
+def listaCharsACadena(listaChar: List[Char]): String = listaChar.mkString
 
 /////////////////// CREACIÓN DEL ÁRBOL ////////////////////////
 def crearArbolHuffman(cadena: String): ArbolHuff =
@@ -90,9 +89,10 @@ private def listaCharsAdistFrec(listaChar: List[Char]): List[(Char, Int)] =
   def actualizarFrec(c: Char, lista: List[(Char, Int)]): List[(Char, Int)] = lista match
     case Nil => List((c, 1))
     case (caracter, frecuencia) :: t =>
-      if (c == caracter) then (c, frecuencia + 1) :: t else (caracter, frecuencia) :: actualizarFrec(c, t)
+      if c == caracter then (c, frecuencia + 1) :: t else (caracter, frecuencia) :: actualizarFrec(c, t)
 
   // Método generador de la lista de tuplas
+  @tailrec
   def AuxListaCharsAdistFrec(listaChar: List[Char], listaFinal: List[(Char, Int)]): List[(Char, Int)] = listaChar match
     case Nil => listaFinal
     case head :: tail =>
@@ -162,6 +162,7 @@ private def esListaSingleton(lista: List[ArbolHuff]): Boolean = lista.length == 
 
 
 //Función currificada que reciba tres parámetros en dos pasos: por un lado, las funciones combinar y esListaSingleton, y, por otro lado, la lista de nodos hoja
+@tailrec
 private def repetirHasta[A](f: List[A] => List[A], condicion: List[A] => Boolean)(lista: List[A]): List[A] = {
   if (condicion(lista)) lista
   else repetirHasta(f, condicion)(f(lista))
@@ -174,6 +175,7 @@ def deArbolATabla(arbol: ArbolHuff): TablaCodigos =
 
   // Método para comprobar si un caracter se encuentra en un arbol
   def hay_caracter_en_arbol(arbol: ArbolHuff, caracter: Char): Boolean =
+    @tailrec
     def aux_caracter(caracter: Char, listaC: List[Char]): Boolean =
       if caracter == listaC.head then true
       else if listaC.tail.nonEmpty then aux_caracter(caracter, listaC.tail)
@@ -182,12 +184,14 @@ def deArbolATabla(arbol: ArbolHuff): TablaCodigos =
     aux_caracter(caracter, arbol.caracteres)
 
   // Generación de la cadena de bits a partir de un arbol y un caracter
+  @tailrec
   def generarCadenaBits(caracter: Char, arbolHuff: ArbolHuff, listaB: List[Bit]): List[Bit] = arbolHuff match
     case RamaHuff(nodoDch, nodoIzq) =>
       if hay_caracter_en_arbol(nodoDch, caracter) then generarCadenaBits(caracter, nodoDch, 1 :: listaB) else generarCadenaBits(caracter, nodoIzq, 0 :: listaB)
     case NodoHuff(caracter, frecuencia) => listaB.reverse
 
   // Generación de la tabla de códigos
+  @tailrec
   def auxdeArbolATabla(caracteres: List[Char], arbol: ArbolHuff, tablaCodigos: TablaCodigos): TablaCodigos = caracteres match
     case Nil => tablaCodigos.reverse
     case head :: tail =>
@@ -198,24 +202,30 @@ def deArbolATabla(arbol: ArbolHuff): TablaCodigos =
 def codificar(arbol: TablaCodigos)(cadena: String): List[Bit] =
 
   // Método para buscar el codigo binaro correspondiente a un caracter
+  @tailrec
   def buscarCodigo(caracter: Char, arbol: TablaCodigos): List[Bit] = arbol match
     case (car, listaB) :: tail => if car == caracter then listaB else buscarCodigo(caracter, tail)
+    case Nil => Nil
 
-
+  @tailrec
   def auxCodificar(caracteres: List[Char], arbol: TablaCodigos, listaSalida: List[Bit]): List[Bit] = caracteres match
     case Nil => listaSalida.reverse
     case head :: tail =>
       val codigo: List[Bit] = buscarCodigo(head, arbol)
-      auxCodificar(tail, arbol, codigo.reverse ::: listaSalida)
+      if codigo == Nil then throw new Error("Alguno de los caractéres introducidos no se encuentra en el árbol") else auxCodificar(tail, arbol, codigo.reverse ::: listaSalida)
 
   auxCodificar(cadena.toList, arbol, List())
 
 def decodificar(tabla: TablaCodigos)(lista: List[Bit]): String =
-
+  @tailrec
   def decodificarAux(tabla: TablaCodigos, lista: List[Bit], cont: Int): (Char, List[Bit]) =
     val filter = tabla.filter((x, y) => y == lista.take(cont))
-    if filter == Nil then decodificarAux(tabla, lista, cont + 1) else (filter.head._1, lista.drop(cont))
+    if cont <= tabla.length then {
+      if filter == Nil then decodificarAux(tabla, lista, cont + 1) else (filter.head._1, lista.drop(cont))
+    }
+    else throw new Error("La lista de Bits introducida no es posible en este árbol")
 
+  @tailrec
   def decodificarFinal(tabla: TablaCodigos, lista: List[Bit], listaC: List[Char]): String = lista match
     case Nil => listaC.reverse.mkString
     case h :: t =>
@@ -242,7 +252,7 @@ object miPrograma extends App{
   val tabla = deArbolATabla(arbol)
   println(tabla)
   val decodArbolP = decodificar(tabla)
-  println(codificar(tabla)(decodArbolP(List(1, 0, 1, 1, 1, 0, 0))))
+  println(decodArbolP(List(0, 1, 1, 1, 0)))
 //  // Probar el método peso
 //  println(s"Peso del árbol: ${arbol.peso}") // Debe ser 5 + 7 + 10 = 22
 //  val listaB: List[Bit] = List(0, 0)
