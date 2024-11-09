@@ -1,7 +1,7 @@
 import scala.annotation.tailrec
 
 abstract class ArbolHuff {
-  
+
   def peso: Int =
     def pesoAux(arbol: ArbolHuff): Int = arbol match
       case NodoHuff(caracter, frecuencia) => frecuencia
@@ -15,7 +15,7 @@ abstract class ArbolHuff {
       case RamaHuff(nodoDch, nodoIzq) => caracteresAux(nodoIzq, Lista) ::: caracteresAux(nodoDch, Lista)
 
     caracteresAux(this, Nil)
-  
+
   def descodificar(bits: List[Bit]): String =
     @tailrec
     def descodAux(arbol: ArbolHuff, bits: List[Bit]): (Char, List[Bit]) = arbol match
@@ -55,7 +55,7 @@ abstract class ArbolHuff {
 
 
     auxCodificar(cadenaAListaChars(cadena), this, Nil)
-  
+
 }
 
 case class NodoHuff(caracter: Char, frecuencia: Int) extends ArbolHuff
@@ -209,14 +209,27 @@ def codificar(arbol: TablaCodigos)(cadena: String): List[Bit] =
       auxCodificar(tail, arbol, codigo.reverse ::: listaSalida)
 
   auxCodificar(cadena.toList, arbol, List())
-  
-  
+
+def decodificar(tabla: TablaCodigos)(lista: List[Bit]): String =
+
+  def decodificarAux(tabla: TablaCodigos, lista: List[Bit], cont: Int): (Char, List[Bit]) =
+    val filter = tabla.filter((x, y) => y == lista.take(cont))
+    if filter == Nil then decodificarAux(tabla, lista, cont + 1) else (filter.head._1, lista.drop(cont))
+
+  def decodificarFinal(tabla: TablaCodigos, lista: List[Bit], listaC: List[Char]): String = lista match
+    case Nil => listaC.reverse.mkString
+    case h :: t =>
+      val (car, list) = decodificarAux(tabla, lista, 1)
+      decodificarFinal(tabla, list, car :: listaC)
+
+  decodificarFinal(tabla, lista, Nil)
+
 
 object ArbolHuff {
   def apply(cadena: String): ArbolHuff = crearArbolHuffman(cadena)
 }
 
-@main def main(): Unit = {
+object miPrograma extends App{
   // Construir un árbol de Huffman simple para pruebas
   val nodoS = NodoHuff('S', 4)
   val nodoO = NodoHuff('O', 3)
@@ -226,52 +239,56 @@ object ArbolHuff {
   val rama2 = RamaHuff(rama1, nodoO)
   val arbol = RamaHuff(rama2, nodoS)
 
-  // Probar el método peso
-  println(s"Peso del árbol: ${arbol.peso}") // Debe ser 5 + 7 + 10 = 22
-  val listaB: List[Bit] = List(0, 0)
-  println(arbol.descodificar(listaB))
-  println(arbol.codificar("SSSSO ES"))
-  
-
-  val frecuencias = List(('a', 5), ('b', 2), ('c', 7), ('d', 1))
-  val listaHojas = arbol.distribFrecAListaHojas(frecuencias)
-  println(listaHojas) // Debería imprimir los nodos ordenados: d, b, a, c
-
-  // Probador del metodo deArbolATabla
-  println(arbol.deArbolATabla(arbol))
-
-  /***
-   * 1. He seguido los pasos para en teoría acabar con la creación del árbol pero me da este error (como estoy en el avión no puedo meterme en ChatGPT para ver que coño pasa.
-   *    Creo que el problema esta en la creación del "object ArbolHuff" no sé exactamente dónde hay que crearlo (yo lo he puesto dentro de la clase abstracta, no se si hay que ponerlo fuera, he pribado a hacerlo y tampoco va)
-   *    Porfi cuando veas esto mira donde hacerlo. Yo voy a seguir con lo siguiente para ver si son cosas que si que puedo hacer, dejo este error en rojo para que puedas verlo.
-   *    Cuando hagas esto comprueba que se haga bien (ahora mismo no se como podríamos comprobarlo pero de alguna forma se podrá hacer)
-   *
-   * 2. Hecho ya el metodo de crear una tabla a partir de un arbol, lo he comprobado con el arbolillo que tenemos hecho en el probador, creo que esta bien.
-   *    De todas formas porfa cuando veas esto asegurate de que esté bien
-   *
-   * 3. Método para codificar strings con listas caracter-codigo hecho. Igual que antes, necesito probarlos
-   */
-
-  // Esto es lo que digo en el punto 1 del comentario grande
-   val miArbol: ArbolHuff = ArbolHuff("Hola")
-
-
-  // Construir un árbol de Huffman simple para pruebas
-  val nodooA = NodoHuff('A', 5)
-  val nodooB = NodoHuff('B', 2)
-  val nodooC = NodoHuff('C', 1)
-  val ramaa1 = RamaHuff(nodooC, nodooB) // Rama que contiene los nodos 'C' y 'B'
-  val arbool = RamaHuff(ramaa1, nodooA) // Rama final que une 'A' con la rama que contiene 'C' y 'B'
-
-  // Probador para el método deArbolATabla
-  val tablaCodigos = arbool.deArbolATabla(arbool)
-  println("Tabla de códigos generada a partir del árbol:")
-  tablaCodigos.foreach { case (caracter, bits) =>
-    println(s"Caracter: $caracter, Código: ${bits.mkString}")
-  }
-
-  // Ejemplo de salida esperada:
-  //   - 'A' podría estar codificado como `1`
-  //   - 'B' podría estar codificado como `01`
-  //   - 'C' podría estar codificado como `00`
+  val tabla = deArbolATabla(arbol)
+  println(tabla)
+  val decodArbolP = decodificar(tabla)
+  println(codificar(tabla)(decodArbolP(List(1, 0, 1, 1, 1, 0, 0))))
+//  // Probar el método peso
+//  println(s"Peso del árbol: ${arbol.peso}") // Debe ser 5 + 7 + 10 = 22
+//  val listaB: List[Bit] = List(0, 0)
+//  println(arbol.descodificar(listaB))
+//  println(arbol.codificar("SSSSO ES"))
+//
+//
+//  val frecuencias = List(('a', 5), ('b', 2), ('c', 7), ('d', 1))
+//  val listaHojas = arbol.distribFrecAListaHojas(frecuencias)
+//  println(listaHojas) // Debería imprimir los nodos ordenados: d, b, a, c
+//
+//  // Probador del metodo deArbolATabla
+//  println(arbol.deArbolATabla(arbol))
+//
+//  /** *
+//   * 1. He seguido los pasos para en teoría acabar con la creación del árbol pero me da este error (como estoy en el avión no puedo meterme en ChatGPT para ver que coño pasa.
+//   * Creo que el problema esta en la creación del "object ArbolHuff" no sé exactamente dónde hay que crearlo (yo lo he puesto dentro de la clase abstracta, no se si hay que ponerlo fuera, he pribado a hacerlo y tampoco va)
+//   * Porfi cuando veas esto mira donde hacerlo. Yo voy a seguir con lo siguiente para ver si son cosas que si que puedo hacer, dejo este error en rojo para que puedas verlo.
+//   * Cuando hagas esto comprueba que se haga bien (ahora mismo no se como podríamos comprobarlo pero de alguna forma se podrá hacer)
+//   *
+//   * 2. Hecho ya el metodo de crear una tabla a partir de un arbol, lo he comprobado con el arbolillo que tenemos hecho en el probador, creo que esta bien.
+//   * De todas formas porfa cuando veas esto asegurate de que esté bien
+//   *
+//   * 3. Método para codificar strings con listas caracter-codigo hecho. Igual que antes, necesito probarlos
+//   */
+//
+//  // Esto es lo que digo en el punto 1 del comentario grande
+//  val miArbol: ArbolHuff = ArbolHuff("Hola")
+//
+//
+//  // Construir un árbol de Huffman simple para pruebas
+//  val nodooA = NodoHuff('A', 5)
+//  val nodooB = NodoHuff('B', 2)
+//  val nodooC = NodoHuff('C', 1)
+//  val ramaa1 = RamaHuff(nodooC, nodooB) // Rama que contiene los nodos 'C' y 'B'
+//  val arbool = RamaHuff(ramaa1, nodooA) // Rama final que une 'A' con la rama que contiene 'C' y 'B'
+//
+//  // Probador para el método deArbolATabla
+//  val tablaCodigos = arbool.deArbolATabla(arbool)
+//  println("Tabla de códigos generada a partir del árbol:")
+//  tablaCodigos.foreach { case (caracter, bits) =>
+//    println(s"Caracter: $caracter, Código: ${bits.mkString}")
+//  }
+//
+//  // Ejemplo de salida esperada:
+//  //   - 'A' podría estar codificado como `1`
+//  //   - 'B' podría estar codificado como `01`
+//  //   - 'C' podría estar codificado como `00`
 }
