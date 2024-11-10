@@ -330,7 +330,7 @@ object Main extends App {
       case 4 =>
         println("Introduce la secuencia de bits a decodificar (ejemplo: 010101):")
         val bits = readLine().toList.collect { case '0' => 0; case '1' => 1 }
-        val textoDecodificado = arbolHuff.descodificar(bits)
+        val textoDecodificado = arbolHuff.descodificar(bits) 
         println(s"Texto decodificado: $textoDecodificado")
         seguirOFinalizar(arbolHuff, tablaCodigos)
 
