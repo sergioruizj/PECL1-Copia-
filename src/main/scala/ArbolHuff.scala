@@ -329,9 +329,15 @@ object Main extends App {
       // 4. Decodificar una secuencia de bits recorriendo el árbol
       case 4 =>
         println("Introduce la secuencia de bits a decodificar (ejemplo: 010101):")
-        val bits = readLine().toList.collect { case '0' => 0; case '1' => 1 }
-        val textoDecodificado = arbolHuff.descodificar(bits) 
-        println(s"Texto decodificado: $textoDecodificado")
+        val bits: List[Bit] = readLine().toList.map {
+          case '0' => 0.asInstanceOf[Bit]
+          case '1' => 1.asInstanceOf[Bit]
+          case _ =>
+            println("Entrada inválida. Solo se permiten '0' y '1'. Inténtalo de nuevo.")
+            return menuRecursivo(arbolHuff, tablaCodigos) // Volver al menú en caso de error
+        }
+        val textoDecodificadoArbol = arbolHuff.descodificar(bits)
+        println(s"Texto decodificado: $textoDecodificadoArbol")
         seguirOFinalizar(arbolHuff, tablaCodigos)
 
       // 5. Codificar un texto usando la tabla de códigos
@@ -345,10 +351,13 @@ object Main extends App {
       // 6. Decodificar una secuencia de bits usando la tabla de códigos
       case 6 =>
         println("Introduce la secuencia de bits a decodificar (ejemplo: 010101):")
-        val bits = readLine().toList.collect { case '0' => 0; case '1' => 1 }
-        val textoDecodificado = arbolHuff.descodificar(bits)
-        println(s"Texto decodificado: $textoDecodificado")
-        seguirOFinalizar(arbolHuff, tablaCodigos)
+        val bits: List[Bit] = readLine().toList.map {
+          case '0' => 0.asInstanceOf[Bit]
+          case '1' => 1.asInstanceOf[Bit]
+          case _ =>
+            println("Entrada inválida. Solo se permiten '0' y '1'. Inténtalo de nuevo.")
+            return menuRecursivo(arbolHuff, tablaCodigos) // Volver al menú en caso de error
+        }
         val textoDecodificado = decodificar(tablaCodigos)(bits)
         println(s"Texto decodificado: $textoDecodificado")
         seguirOFinalizar(arbolHuff, tablaCodigos)
