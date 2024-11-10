@@ -1,4 +1,5 @@
 import scala.annotation.tailrec
+import scala.io.StdIn.readLine
 
 abstract class ArbolHuff {
 
@@ -233,25 +234,162 @@ def decodificar(tabla: TablaCodigos)(lista: List[Bit]): String =
   decodificarFinal(tabla, lista, Nil)
 
 
-object miPrograma extends App{
-  // Construir un árbol de Huffman simple para pruebas
-  val nodoS = NodoHuff('S', 4)
-  val nodoO = NodoHuff('O', 3)
-  val nodoE = NodoHuff('E', 2)
-  val nodoEsp = NodoHuff(' ', 2)
-  val rama1 = RamaHuff(nodoEsp, nodoE)
-  val rama2 = RamaHuff(rama1, nodoO)
-  val arbol = RamaHuff(rama2, nodoS)
+//object miPrograma extends App{
+//  // Construir un árbol de Huffman simple para pruebas
+//  val nodoS = NodoHuff('S', 4)
+//  val nodoO = NodoHuff('O', 3)
+//  val nodoE = NodoHuff('E', 2)
+//  val nodoEsp = NodoHuff(' ', 2)
+//  val rama1 = RamaHuff(nodoEsp, nodoE)
+//  val rama2 = RamaHuff(rama1, nodoO)
+//  val arbol = RamaHuff(rama2, nodoS)
+//
+//  val tabla = deArbolATabla(arbol)
+//  println(tabla)
+//
+//  val arbol2 = ArbolHuff("this is an example of a huffman tree")
+//  val tabla2 = deArbolATabla(arbol2)
+//  println(tabla2)
+//  println(arbol2.caracteres)
+//  val decodArbolP = decodificar(tabla2)
+//
+//  println(decodArbolP(codificar(tabla2)("aef i")))
+//
+//}
 
-  val tabla = deArbolATabla(arbol)
-  println(tabla)
+object Main extends App {
 
-  val arbol2 = ArbolHuff("this is an example of a huffman tree")
-  val tabla2 = deArbolATabla(arbol2)
-  println(tabla2)
-  println(arbol2.caracteres)
-  val decodArbolP = decodificar(tabla2)
+  def inicializarArbol(): ArbolHuff = {
+    print("Bienvenido al probador de árboles Huffman!!\n" +
+      "Empecemos primero creando tu árbol, que nos dará las claves para poder codificar y decodificar" +
+      "todos los textos que se te ocurran.\n" +
+      "Por favor, introduzca la cadena de caracteres que crearán tu árbol: ")
+    val cadenaCreacionArbol = readLine()
+    println("Creando árbol...")
+    val miArbol = ArbolHuff(cadenaCreacionArbol)
+    print("Árbol Huffman creado con éxito!!\n")
+    miArbol
+  }
 
-  println(decodArbolP(codificar(tabla2)("aef i")))
+  def inicializarTabla(arbolHuff: ArbolHuff): TablaCodigos = {
+    deArbolATabla(arbolHuff)
+  }
 
+  def imprimirMenuPrincipal(): Unit = {
+    println("Bienvenido al menú principal.")
+    println("   1. Ver el peso del árbol")
+    println("   2. Ver la lista de caracteres del árbol")
+    println("   3. Codificar un texto recorriendo el árbol")
+    println("   4. Decodificar una secuencia de bits recorriendo el árbol")
+    println("   5. Codificar un texto usando la tabla de códigos")
+    println("   6. Decodificar una secuencia de bits usando la tabla de códigos")
+    println("   7. Comprobar si un carácter específico está en el árbol")
+    println("   8. Mostrar las frecuencias de caracteres en el árbol")
+    println("   9. Crear un nuevo árbol con otra cadena")
+    println("   10. Salir del programa")
+    print("Por favor, elige la opción deseada: ")
+  }
+
+  def seguirOFinalizar(arbolHuff: ArbolHuff, tablaCodigos: TablaCodigos): Unit = {
+    println("Por favor elija entre las siguientes opciones: ")
+    println("   1. Volver al menú principal")
+    println("   2. Salir del programa")
+    print("Por favor, elige la opción deseada: ")
+    val opcion2 = readLine().toInt
+    opcion2 match {
+      case 1 => menuRecursivo(arbolHuff, tablaCodigos)
+      case 2 => println("Saliendo del programa. Hasta luego!!!")
+      case _ => println("Opción seleccionada no válida. Inténtalo de nuevo."); seguirOFinalizar(arbolHuff, tablaCodigos)
+    }
+  }
+
+  def menuRecursivo(arbolHuff: ArbolHuff, tablaCodigos: TablaCodigos): Unit = {
+    imprimirMenuPrincipal()
+    val opcion = readLine().toInt
+
+    opcion match {
+      // 1. Ver el peso del árbol
+      case 1 =>
+        println(s"El peso del árbol es: ${arbolHuff.peso}")
+        seguirOFinalizar(arbolHuff, tablaCodigos)
+
+      // 2. Ver la lista de caracteres del árbol
+      case 2 =>
+        println(s"Lista de caracteres del árbol: ${arbolHuff.caracteres.mkString(", ")}")
+        seguirOFinalizar(arbolHuff, tablaCodigos)
+
+      // 3. Codificar un texto recorriendo el árbol
+      case 3 =>
+        println("Introduce el texto a codificar:")
+        val texto = readLine()
+        val bitsCodificados = arbolHuff.codificar(texto)
+        println(s"Texto codificado: ${bitsCodificados.mkString}")
+        seguirOFinalizar(arbolHuff, tablaCodigos)
+
+      // 4. Decodificar una secuencia de bits recorriendo el árbol
+      case 4 =>
+        println("Introduce la secuencia de bits a decodificar (ejemplo: 010101):")
+        val bits = readLine().toList.collect { case '0' => 0; case '1' => 1 }
+        val textoDecodificado = arbolHuff.descodificar(bits)
+        println(s"Texto decodificado: $textoDecodificado")
+        seguirOFinalizar(arbolHuff, tablaCodigos)
+
+      // 5. Codificar un texto usando la tabla de códigos
+      case 5 =>
+        println("Introduce el texto a codificar usando la tabla:")
+        val texto = readLine()
+        val bitsCodificados = codificar(tablaCodigos)(texto)
+        println(s"Texto codificado: ${bitsCodificados.mkString}")
+        seguirOFinalizar(arbolHuff, tablaCodigos)
+
+      // 6. Decodificar una secuencia de bits usando la tabla de códigos
+      case 6 =>
+        println("Introduce la secuencia de bits a decodificar (ejemplo: 010101):")
+        val bits = readLine().toList.collect { case '0' => 0; case '1' => 1 }
+        val textoDecodificado = arbolHuff.descodificar(bits)
+        println(s"Texto decodificado: $textoDecodificado")
+        seguirOFinalizar(arbolHuff, tablaCodigos)
+        val textoDecodificado = decodificar(tablaCodigos)(bits)
+        println(s"Texto decodificado: $textoDecodificado")
+        seguirOFinalizar(arbolHuff, tablaCodigos)
+
+      // 7. Comprobar si un carácter específico está en el árbol
+      case 7 =>
+        println("Introduce el carácter a comprobar:")
+        val caracter = readLine().headOption.getOrElse(' ')
+        println(s"El carácter '$caracter' ${if (arbolHuff.caracteres.contains(caracter)) "sí" else "no"} está en el árbol.")
+        seguirOFinalizar(arbolHuff, tablaCodigos)
+
+      // 8. Mostrar las frecuencias de caracteres en el árbol
+      case 8 =>
+        println("Frecuencias de caracteres en el árbol:")
+        arbolHuff.caracteres.foreach { char =>
+          val frecuencia = arbolHuff match {
+            case NodoHuff(`char`, freq) => freq
+            case _ => 0
+          }
+          println(s"$char -> $frecuencia")
+        }
+        seguirOFinalizar(arbolHuff, tablaCodigos)
+
+      // 9. Crear un nuevo árbol con otra cadena
+      case 9 =>
+        val nuevoArbol = inicializarArbol()
+        val nuevaTabla = inicializarTabla(nuevoArbol)
+        menuRecursivo(nuevoArbol, nuevaTabla)
+
+      // 10. Salir del programa
+      case 10 =>
+        println("Saliendo del programa. Hasta luego!!")
+
+      // Opción no válida
+      case _ =>
+        println("Opción seleccionada no válida. Inténtalo de nuevo.")
+        menuRecursivo(arbolHuff, tablaCodigos)
+    }
+  }
+
+  val arbolInicial = inicializarArbol()
+  val tablaInicial = inicializarTabla(arbolInicial)
+  menuRecursivo(arbolInicial, tablaInicial)
 }
