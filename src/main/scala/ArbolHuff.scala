@@ -298,8 +298,12 @@ object Main extends App {
       case "3" =>
         println("Introduce el texto a codificar:")
         val texto = readLine()
-        val bitsCodificados = arbolHuff.codificar(texto)
-        println(s"Texto codificado: ${bitsCodificados.mkString}")
+        try {
+          val bitsCodificados = arbolHuff.codificar(texto)
+          println(s"Texto codificado: ${bitsCodificados.mkString}")
+        } catch {
+          case e: Error => println(s"Error: ${e.getMessage}.")
+        }
         seguirOFinalizar(arbolHuff, tablaCodigos)
 
       // 4. Decodificar una secuencia de bits recorriendo el árbol
@@ -312,16 +316,24 @@ object Main extends App {
             println("Entrada inválida. Solo se permiten '0' y '1'. Inténtalo de nuevo.")
             return menuRecursivo(arbolHuff, tablaCodigos) // Volver al menú en caso de error
         }
-        val textoDecodificadoArbol = arbolHuff.descodificar(bits)
-        println(s"Texto decodificado: $textoDecodificadoArbol")
+        try {
+          val textoDecodificadoArbol = arbolHuff.descodificar(bits)
+          println(s"Texto decodificado: $textoDecodificadoArbol")
+        } catch {
+          case e: Error => println(s"Error: ${e.getMessage}.")
+        }
         seguirOFinalizar(arbolHuff, tablaCodigos)
 
       // 5. Codificar un texto usando la tabla de códigos
       case "5" =>
         println("Introduce el texto a codificar usando la tabla:")
         val texto = readLine()
-        val bitsCodificados = codificar(tablaCodigos)(texto)
-        println(s"Texto codificado: ${bitsCodificados.mkString}")
+        try {
+          val bitsCodificados = codificar(tablaCodigos)(texto)
+          println(s"Texto codificado: ${bitsCodificados.mkString}")
+        } catch {
+          case e: Error => println(s"Error: ${e.getMessage}.")
+        }
         seguirOFinalizar(arbolHuff, tablaCodigos)
 
       // 6. Decodificar una secuencia de bits usando la tabla de códigos
@@ -334,8 +346,12 @@ object Main extends App {
             println("Entrada inválida. Solo se permiten '0' y '1'. Inténtalo de nuevo.")
             return menuRecursivo(arbolHuff, tablaCodigos) // Volver al menú en caso de error
         }
+        try {
         val textoDecodificado = decodificar(tablaCodigos)(bits)
-        println(s"Texto decodificado: $textoDecodificado")
+          println(s"Texto decodificado: $textoDecodificado")
+        } catch {
+          case e: Error => println(s"Error: ${e.getMessage}.")
+        }
         seguirOFinalizar(arbolHuff, tablaCodigos)
 
       // 7. Comprobar si un carácter específico está en el árbol
