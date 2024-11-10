@@ -260,7 +260,7 @@ object Main extends App {
     println("   5. Codificar un texto usando la tabla de códigos")
     println("   6. Decodificar una secuencia de bits usando la tabla de códigos")
     println("   7. Comprobar si un carácter específico está en el árbol")
-    println("   8. Mostrar las frecuencias de caracteres en el árbol")
+    println("   8. Mostrar la tabla de código")
     println("   9. Crear un nuevo árbol con otra cadena")
     println("   10. Salir del programa")
     print("Por favor, elige la opción deseada: ")
@@ -361,17 +361,15 @@ object Main extends App {
         println(s"El carácter '$caracter' ${if (arbolHuff.caracteres.contains(caracter)) "sí" else "no"} está en el árbol.")
         seguirOFinalizar(arbolHuff, tablaCodigos)
 
-      // 8. Mostrar las frecuencias de caracteres en el árbol
+      // 8. Mostrar la tabla de código
       case "8" =>
-        println("Frecuencias de caracteres en el árbol:")
-        arbolHuff.caracteres.foreach { char =>
-          val frecuencia = arbolHuff match {
-            case NodoHuff(`char`, freq) => freq
-            case _ => 0
-          }
-          println(s"$char -> $frecuencia")
-        }
+        println("Tabla de códigos de Huffman:")
+        val tablaFormateada = tablaCodigos.map{
+          case (caracter, codigo) => s"Carácter: '$caracter' => Código: ${codigo.mkString}"
+        }.mkString("\n")
+        println(tablaFormateada)
         seguirOFinalizar(arbolHuff, tablaCodigos)
+
 
       // 9. Crear un nuevo árbol con otra cadena
       case "9" =>
